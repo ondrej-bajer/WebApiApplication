@@ -5,8 +5,9 @@ using WebApiApplication.Interfaces;
 
 namespace WebApiApplication.Controllers
 {
-    [Route("api/v1/[controller]")]
     [ApiController]
+    [Route("api/v1/[controller]")]
+    [Produces("application/json")]
     public class ProductsController : ControllerBase
     {
         private readonly IProductService _service;
@@ -23,13 +24,20 @@ namespace WebApiApplication.Controllers
         [HttpGet("{id:int}")]
         public ActionResult<ProductDto> GetById(int id)
         {
+            if (id <= 0)
+                return BadRequest("Id must be a positive integer.");
+
             var product = _service.GetById(id);
             return product is null ? NotFound() : Ok(product);
         }
 
         [HttpPatch("{id:int}/description")]
+        [Consumes("application/json")]
         public IActionResult UpdateDescription(int id, [FromBody] UpdateProductDescriptionRequest request)
         {
+            if (id <= 0)
+                return BadRequest("Id must be a positive integer.");
+
             var ok = _service.UpdateDescription(id, request.Description);
             return ok ? NoContent() : NotFound();
         }

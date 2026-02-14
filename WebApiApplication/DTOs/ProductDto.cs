@@ -1,9 +1,13 @@
-﻿namespace WebApiApplication.DTOs
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace WebApiApplication.DTOs
 {
-    public record ProductDto(
+    public record ProductDto
+        (
         int Id,
         string Name,
         string ImgUri,
-        decimal Price,
-        string? Description);
+        decimal Price, 
+        string? Description
+        );
 }
