@@ -1,4 +1,7 @@
 
+using WebApiApplication.Interfaces;
+using WebApiApplication.Services;
+
 namespace WebApiApplication
 {
     public class Program
@@ -8,6 +11,8 @@ namespace WebApiApplication
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
+            // In-memory implementation -> singleton is fine for this stage
+            builder.Services.AddSingleton<IProductService, InMemoryProductService>();
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
