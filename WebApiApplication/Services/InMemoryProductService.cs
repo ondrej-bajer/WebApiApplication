@@ -7,10 +7,10 @@ namespace WebApiApplication.Services
     public class InMemoryProductService : IProductService
     {
         private readonly List<Product> _products =
-    [
-        new() { Id = 1, Name = "Laptop", ImgUri = "https://img/1", Price = 1000m, Description = "Gaming laptop" },
-        new() { Id = 2, Name = "Mouse", ImgUri = "https://img/2", Price = 50m, Description = null },
-    ];
+            [
+                new() { Id = 1, Name = "Laptop", ImgUri = "https://img/1", Price = 1000m, Description = "Gaming laptop" },
+                new() { Id = 2, Name = "Mouse", ImgUri = "https://img/2", Price = 50m, Description = null },
+            ];
 
         public IReadOnlyList<ProductDto> GetAll()
             => _products.Select(ToDto).ToList();
