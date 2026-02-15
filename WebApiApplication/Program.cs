@@ -9,79 +9,105 @@ using WebApiApplication.Data;
 using WebApiApplication.Interfaces;
 using WebApiApplication.Middleware;
 using WebApiApplication.Services;
+using Serilog;
 
 namespace WebApiApplication
 {
-    public class Program
+    public partial class Program
     {
+
         public static void Main(string[] args)
         {
-            var builder = WebApplication.CreateBuilder(args);
+            Log.Logger = new LoggerConfiguration()
+                .WriteTo.Console()
+                .WriteTo.File("logs/log-.txt", rollingInterval: RollingInterval.Day)
+                .CreateLogger();
 
-            //choose "Sql" / "InMemory" in appsettings.json
-            var dataSource = builder.Configuration["DataSource"];
-            if (string.Equals(dataSource, "Sql", StringComparison.OrdinalIgnoreCase))
+            try
             {
-                builder.Services.AddDbContext<AppDbContext>(options =>
-                    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+                Log.Information("Starting WebApi");
 
-                builder.Services.AddScoped<IProductService, EfProductService>();
-            }
-            else
-            {
-                builder.Services.AddSingleton<IProductService, InMemoryProductService>();
-            }
+                var builder = WebApplication.CreateBuilder(args);
 
-            builder.Services.AddControllers();
-            
-            builder.Services.AddApiVersioning(options =>
-            {
-                options.DefaultApiVersion = new ApiVersion(1, 0);
-                options.AssumeDefaultVersionWhenUnspecified = true;
-                options.ReportApiVersions = true;
-                options.ApiVersionReader = new UrlSegmentApiVersionReader();
-            })
-            .AddMvc()
-            .AddApiExplorer(options =>
-            {
-                options.GroupNameFormat = "'v'VVV";
-                options.SubstituteApiVersionInUrl = true;
-            });
+                builder.Host.UseSerilog();
 
-
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigSwaggerOptions>();
-            builder.Services.AddSwaggerGen();
-            builder.Services.AddTransient<ExceptionHandlingMiddleware>();
-
-            var app = builder.Build();
-
-            // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI(options =>
+                //choose "Sql" / "InMemory" in appsettings.json
+                var dataSource = builder.Configuration["DataSource"];
+                if (string.Equals(dataSource, "Sql", StringComparison.OrdinalIgnoreCase))
                 {
-                    var provider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
+                    builder.Services.AddDbContext<AppDbContext>(options =>
+                        options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-                    foreach (var description in provider.ApiVersionDescriptions)
-                    {
-                        options.SwaggerEndpoint(
-                            $"/swagger/{description.GroupName}/swagger.json",
-                            description.GroupName.ToUpperInvariant());
-                    }
+                    builder.Services.AddScoped<IProductService, EfProductService>();
+                }
+                else
+                {
+                    builder.Services.AddSingleton<IProductService, InMemoryProductService>();
+                }
+
+                builder.Services.AddControllers();
+
+                builder.Services.AddApiVersioning(options =>
+                {
+                    options.DefaultApiVersion = new ApiVersion(1, 0);
+                    options.AssumeDefaultVersionWhenUnspecified = true;
+                    options.ReportApiVersions = true;
+                    options.ApiVersionReader = new UrlSegmentApiVersionReader();
+                })
+                .AddMvc()
+                .AddApiExplorer(options =>
+                {
+                    options.GroupNameFormat = "'v'VVV";
+                    options.SubstituteApiVersionInUrl = true;
                 });
+
+
+                builder.Services.AddEndpointsApiExplorer();
+                builder.Services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigSwaggerOptions>();
+                builder.Services.AddSwaggerGen();
+                builder.Services.AddTransient<ExceptionHandlingMiddleware>();
+                builder.Services.AddHealthChecks();
+
+                var app = builder.Build();
+
+                // Configure the HTTP request pipeline.
+                if (app.Environment.IsDevelopment())
+                {
+                    app.UseSwagger();
+                    app.UseSwaggerUI(options =>
+                    {
+                        var provider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
+
+                        foreach (var description in provider.ApiVersionDescriptions)
+                        {
+                            options.SwaggerEndpoint(
+                                $"/swagger/{description.GroupName}/swagger.json",
+                                description.GroupName.ToUpperInvariant());
+                        }
+                    });
+                }
+
+                app.UseMiddleware<ExceptionHandlingMiddleware>();
+                app.UseSerilogRequestLogging();
+                app.MapHealthChecks("/health");
+
+                app.UseHttpsRedirection();
+
+                app.MapControllers();
+
+                app.Run();
             }
-
-            app.UseMiddleware<ExceptionHandlingMiddleware>();
-
-            app.UseHttpsRedirection();
-
-            app.MapControllers();
-
-            app.Run();
+            
+            catch (Exception ex) 
+            {
+                Log.Fatal(ex, "Application terminated unexpectedly");
+            }
+            
+            finally
+            {
+                Log.CloseAndFlush();
+            }
         }
     }
-}
 
-public partial class Program { }
+}
