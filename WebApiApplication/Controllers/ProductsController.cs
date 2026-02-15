@@ -10,7 +10,6 @@ namespace WebApiApplication.Controllers
     [ApiVersion("1.0")]
     [ApiVersion("2.0")]
     [Route("api/v{version:apiVersion}/[controller]")]
-    [Produces("application/json")]
     public class ProductsController : ControllerBase
     {
         private readonly IProductService _service;
@@ -22,6 +21,8 @@ namespace WebApiApplication.Controllers
 
         [HttpGet]
         [MapToApiVersion("1.0")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<ProductDto>))]
+        [Produces("application/json")]
         public async Task<ActionResult<IEnumerable<ProductDto>>> GetAllV1(CancellationToken ct)
         {
             return Ok(await _service.GetAllAsync(ct));
@@ -29,6 +30,8 @@ namespace WebApiApplication.Controllers
 
         [HttpGet]
         [MapToApiVersion("2.0")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PagedResponse<ProductDto>))]
+        [Produces("application/json")]
         public async Task<ActionResult<PagedResponse<ProductDto>>> GetAllV2([FromQuery] PaginationQuery query, CancellationToken ct)
         {
             return Ok(await _service.GetPagedAsync(query.Page, query.PageSize, ct));
@@ -36,6 +39,10 @@ namespace WebApiApplication.Controllers
 
         [HttpGet("{id:int}")]
         [MapToApiVersion("1.0")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ProductDto))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [Produces("application/json")]
         public async Task<ActionResult<ProductDto>> GetById(int id, CancellationToken ct)
         {
             if (id <= 0)
@@ -48,6 +55,10 @@ namespace WebApiApplication.Controllers
         [HttpPatch("{id:int}/description")]
         [Consumes("application/json")]
         [MapToApiVersion("1.0")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [Produces("application/json")]
         public async Task<IActionResult> UpdateDescription(int id, [FromBody] UpdateProductDescriptionRequest request, CancellationToken ct)
         {
             if (id <= 0)
