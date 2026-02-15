@@ -1,13 +1,14 @@
 
-using WebApiApplication.Interfaces;
-using WebApiApplication.Services;
-using Microsoft.EntityFrameworkCore;
-using WebApiApplication.Data;
 using Asp.Versioning;
 using Asp.Versioning.ApiExplorer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using WebApiApplication.Configuration;
+using WebApiApplication.Data;
+using WebApiApplication.Interfaces;
+using WebApiApplication.Middleware;
+using WebApiApplication.Services;
 
 namespace WebApiApplication
 {
@@ -32,7 +33,7 @@ namespace WebApiApplication
             }
 
             builder.Services.AddControllers();
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+            
             builder.Services.AddApiVersioning(options =>
             {
                 options.DefaultApiVersion = new ApiVersion(1, 0);
@@ -51,6 +52,7 @@ namespace WebApiApplication
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigSwaggerOptions>();
             builder.Services.AddSwaggerGen();
+            builder.Services.AddTransient<ExceptionHandlingMiddleware>();
 
             var app = builder.Build();
 
@@ -71,10 +73,9 @@ namespace WebApiApplication
                 });
             }
 
+            app.UseMiddleware<ExceptionHandlingMiddleware>();
+
             app.UseHttpsRedirection();
-
-            app.UseAuthorization();
-
 
             app.MapControllers();
 
