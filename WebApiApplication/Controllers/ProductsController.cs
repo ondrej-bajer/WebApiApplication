@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Asp.Versioning;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using WebApiApplication.DTOs;
 using WebApiApplication.Interfaces;
@@ -6,7 +7,9 @@ using WebApiApplication.Interfaces;
 namespace WebApiApplication.Controllers
 {
     [ApiController]
-    [Route("api/v1/[controller]")]
+    [ApiVersion("1.0")]
+    [ApiVersion("2.0")]
+    [Route("api/v{version:apiVersion}/[controller]")]
     [Produces("application/json")]
     public class ProductsController : ControllerBase
     {
@@ -18,10 +21,18 @@ namespace WebApiApplication.Controllers
         }
 
         [HttpGet]
-        public ActionResult<IEnumerable<ProductDto>> GetAll()
+        [MapToApiVersion("1.0")]
+        public ActionResult<IEnumerable<ProductDto>> GetAllV1()
             => Ok(_service.GetAll());
 
+        [HttpGet]
+        [MapToApiVersion("2.0")]
+        public ActionResult<PagedResponse<ProductDto>> GetAllV2([FromQuery] PaginationQuery query)
+            => Ok(_service.GetPaged(query.Page, query.PageSize));
+
+
         [HttpGet("{id:int}")]
+        [MapToApiVersion("1.0")]
         public ActionResult<ProductDto> GetById(int id)
         {
             if (id <= 0)
@@ -33,6 +44,7 @@ namespace WebApiApplication.Controllers
 
         [HttpPatch("{id:int}/description")]
         [Consumes("application/json")]
+        [MapToApiVersion("1.0")]
         public IActionResult UpdateDescription(int id, [FromBody] UpdateProductDescriptionRequest request)
         {
             if (id <= 0)

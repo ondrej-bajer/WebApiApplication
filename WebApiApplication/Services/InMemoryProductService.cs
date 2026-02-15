@@ -29,5 +29,23 @@ namespace WebApiApplication.Services
 
         private static ProductDto ToDto(Product p)
             => new(p.Id, p.Name, p.ImgUri, p.Price, p.Description);
+
+        public PagedResponse<ProductDto> GetPaged(int page, int pageSize)
+        {
+            page = page < 1 ? 1 : page;
+            pageSize = pageSize < 1 ? 10 : pageSize;
+            pageSize = pageSize > 100 ? 100 : pageSize;
+
+            var totalCount = _products.Count;
+
+            var items = _products
+                .OrderBy(p => p.Id)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(ToDto)
+                .ToList();
+
+            return new PagedResponse<ProductDto>(items, page, pageSize, totalCount);
+        }
     }
 }
