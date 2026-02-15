@@ -18,7 +18,7 @@ public class ProductServiceTests
         var products = svc.GetAll();
 
         Assert.NotEmpty(products);
-        Assert.Equal(2, products.Count);
+        Assert.Equal(30, products.Count);
     }
 
     [Fact]

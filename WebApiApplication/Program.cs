@@ -82,3 +82,5 @@ namespace WebApiApplication
         }
     }
 }
+
+public partial class Program { }
