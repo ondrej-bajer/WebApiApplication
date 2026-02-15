@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace WebApiTest;
 
-public sealed class CustomWebApplicationFactory : WebApplicationFactory<Program>
+public sealed class CustomWebApplicationFactory : WebApplicationFactory<WebApiApplication.Program>
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
