@@ -11,28 +11,28 @@ namespace WebApiApplication.Services
 
         public EfProductService(AppDbContext db) => _db = db;
 
-        public IReadOnlyList<ProductDto> GetAll()
-            => _db.Products.AsNoTracking()
+        public async Task<IReadOnlyList<ProductDto>> GetAllAsync(CancellationToken ct = default)
+            => await _db.Products.AsNoTracking()
                 .Select(p => new ProductDto(p.Id, p.Name, p.ImgUri, p.Price, p.Description))
-                .ToList();
+                .ToListAsync(ct);
 
-        public ProductDto? GetById(int id)
-            => _db.Products.AsNoTracking()
+        public async Task<ProductDto?> GetByIdAsync(int id, CancellationToken ct = default)
+            => await _db.Products.AsNoTracking()
                 .Where(p => p.Id == id)
                 .Select(p => new ProductDto(p.Id, p.Name, p.ImgUri, p.Price, p.Description))
-                .FirstOrDefault();
+                .FirstOrDefaultAsync(ct);
 
-        public bool UpdateDescription(int id, string? description)
+        public async Task<bool> UpdateDescriptionAsync(int id, string? description, CancellationToken ct = default)
         {
-            var product = _db.Products.FirstOrDefault(p => p.Id == id);
+            var product = await _db.Products.FirstOrDefaultAsync(p => p.Id == id, ct);
             if (product is null) return false;
 
             product.Description = description;
-            _db.SaveChanges();
+            await _db.SaveChangesAsync(ct);
             return true;
         }
 
-        public PagedResponse<ProductDto> GetPaged(int page, int pageSize)
+        public async Task<PagedResponse<ProductDto>> GetPagedAsync(int page, int pageSize, CancellationToken ct = default)
         {
             page = page < 1 ? 1 : page;
             pageSize = pageSize < 1 ? 10 : pageSize;
@@ -40,19 +40,14 @@ namespace WebApiApplication.Services
 
             var query = _db.Products.AsNoTracking();
 
-            var totalCount = query.Count();
+            var totalCount = await query.CountAsync(ct);
 
-            var items = query
+            var items = await query
                 .OrderBy(p => p.Id)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(p => new ProductDto(
-                    p.Id,
-                    p.Name,
-                    p.ImgUri,
-                    p.Price,
-                    p.Description))
-                .ToList();
+                .Select(p => new ProductDto(p.Id, p.Name, p.ImgUri, p.Price, p.Description))
+                .ToListAsync(ct);
 
             return new PagedResponse<ProductDto>(items, page, pageSize, totalCount);
         }

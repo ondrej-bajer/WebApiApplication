@@ -42,25 +42,22 @@ namespace WebApiApplication.Services
                 new() { Id = 30, Name = "Scanner",           ImgUri = "https://img/30", Price = 95m,   Description = "Document scanner" },
             ];
 
-        public IReadOnlyList<ProductDto> GetAll()
-            => _products.Select(ToDto).ToList();
+        public Task<IReadOnlyList<ProductDto>> GetAllAsync(CancellationToken ct = default)
+            => Task.FromResult<IReadOnlyList<ProductDto>>(_products.Select(ToDto).ToList());
 
-        public ProductDto? GetById(int id)
-            => _products.Where(p => p.Id == id).Select(ToDto).FirstOrDefault();
+        public Task<ProductDto?> GetByIdAsync(int id, CancellationToken ct = default)
+            => Task.FromResult(_products.Where(p => p.Id == id).Select(ToDto).FirstOrDefault());
 
-        public bool UpdateDescription(int id, string? description)
+        public Task<bool> UpdateDescriptionAsync(int id, string? description, CancellationToken ct = default)
         {
             var product = _products.FirstOrDefault(p => p.Id == id);
-            if (product is null) return false;
+            if (product is null) return Task.FromResult(false);
 
             product.Description = description;
-            return true;
+            return Task.FromResult(true);
         }
 
-        private static ProductDto ToDto(Product p)
-            => new(p.Id, p.Name, p.ImgUri, p.Price, p.Description);
-
-        public PagedResponse<ProductDto> GetPaged(int page, int pageSize)
+        public Task<PagedResponse<ProductDto>> GetPagedAsync(int page, int pageSize, CancellationToken ct = default)
         {
             page = page < 1 ? 1 : page;
             pageSize = pageSize < 1 ? 10 : pageSize;
@@ -75,7 +72,11 @@ namespace WebApiApplication.Services
                 .Select(ToDto)
                 .ToList();
 
-            return new PagedResponse<ProductDto>(items, page, pageSize, totalCount);
+            return Task.FromResult(new PagedResponse<ProductDto>(items, page, pageSize, totalCount));
         }
+
+        private static ProductDto ToDto(Product p)
+            => new(p.Id, p.Name, p.ImgUri, p.Price, p.Description);
+ 
     }
 }

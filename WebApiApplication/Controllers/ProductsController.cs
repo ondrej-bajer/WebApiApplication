@@ -22,35 +22,38 @@ namespace WebApiApplication.Controllers
 
         [HttpGet]
         [MapToApiVersion("1.0")]
-        public ActionResult<IEnumerable<ProductDto>> GetAllV1()
-            => Ok(_service.GetAll());
+        public async Task<ActionResult<IEnumerable<ProductDto>>> GetAllV1(CancellationToken ct)
+        {
+            return Ok(await _service.GetAllAsync(ct));
+        }
 
         [HttpGet]
         [MapToApiVersion("2.0")]
-        public ActionResult<PagedResponse<ProductDto>> GetAllV2([FromQuery] PaginationQuery query)
-            => Ok(_service.GetPaged(query.Page, query.PageSize));
-
+        public async Task<ActionResult<PagedResponse<ProductDto>>> GetAllV2([FromQuery] PaginationQuery query, CancellationToken ct)
+        {
+            return Ok(await _service.GetPagedAsync(query.Page, query.PageSize, ct));
+        }
 
         [HttpGet("{id:int}")]
         [MapToApiVersion("1.0")]
-        public ActionResult<ProductDto> GetById(int id)
+        public async Task<ActionResult<ProductDto>> GetById(int id, CancellationToken ct)
         {
             if (id <= 0)
                 return BadRequest("Id must be a positive integer.");
 
-            var product = _service.GetById(id);
+            var product = await _service.GetByIdAsync(id, ct);
             return product is null ? NotFound() : Ok(product);
         }
 
         [HttpPatch("{id:int}/description")]
         [Consumes("application/json")]
         [MapToApiVersion("1.0")]
-        public IActionResult UpdateDescription(int id, [FromBody] UpdateProductDescriptionRequest request)
+        public async Task<IActionResult> UpdateDescription(int id, [FromBody] UpdateProductDescriptionRequest request, CancellationToken ct)
         {
             if (id <= 0)
                 return BadRequest("Id must be a positive integer.");
 
-            var ok = _service.UpdateDescription(id, request.Description);
+            var ok = await _service.UpdateDescriptionAsync(id, request.Description, ct);
             return ok ? NoContent() : NotFound();
         }
     }
