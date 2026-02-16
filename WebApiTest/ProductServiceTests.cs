@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using WebApiApplication.Interfaces;
 using WebApiApplication.Services;
 using Xunit;
 
@@ -11,44 +12,47 @@ namespace WebApiTest;
 public class ProductServiceTests
 {
     [Fact]
-    public void GetAll_ReturnsAllProducts()
+    public async Task GetAllAsync_ReturnsAllProducts()
     {
-        var svc = new InMemoryProductService();
+        IProductService svc = new InMemoryProductService();
 
-        var products = svc.GetAll();
+        var products = await svc.GetAllAsync();
 
         Assert.NotEmpty(products);
         Assert.Equal(30, products.Count);
     }
 
     [Fact]
-    public void GetById_ReturnsNull_WhenProductDoesNotExist()
+    public async Task GetByIdAsync_ReturnsNull_WhenProductDoesNotExist()
     {
-        var svc = new InMemoryProductService();
+        IProductService svc = new InMemoryProductService();
 
-        var result = svc.GetById(999);
+        var result = await svc.GetByIdAsync(999);
 
         Assert.Null(result);
     }
 
     [Fact]
-    public void UpdateDescription_ReturnsFalse_WhenProductDoesNotExist()
+    public async Task UpdateDescriptionAsync_ReturnsFalse_WhenProductDoesNotExist()
     {
-        var svc = new InMemoryProductService();
+        IProductService svc = new InMemoryProductService();
 
-        var ok = svc.UpdateDescription(999, "x");
+        var ok = await svc.UpdateDescriptionAsync(999, "x");
 
         Assert.False(ok);
     }
 
     [Fact]
-    public void UpdateDescription_WhenProductExists()
+    public async Task UpdateDescriptionAsync_WhenProductExists()
     {
-        var svc = new InMemoryProductService();
+        IProductService svc = new InMemoryProductService();
 
-        var ok = svc.UpdateDescription(1, "updated");
+        var ok = await svc.UpdateDescriptionAsync(1, "updated");
 
         Assert.True(ok);
-        Assert.Equal("updated", svc.GetById(1)!.Description);
+
+        var product = await svc.GetByIdAsync(1);
+        Assert.NotNull(product);
+        Assert.Equal("updated", product!.Description);
     }
 }
