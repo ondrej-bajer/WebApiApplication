@@ -1,4 +1,4 @@
-# WebApiApplication � Product REST API
+﻿# WebApiApplication – Product REST API
 
 ## Overview
 
@@ -12,6 +12,23 @@ It provides product endpoints with:
 - Database-level pagination (v2)
 - Support for MSSQL (LocalDB) and InMemory data source
 - EF Core migrations and seed data
+- Unit and integration test
+
+---
+
+## Architecture Overview
+
+The application follows a layered architecture to ensure separation of concerns and maintainability.
+
+- Controllers handle HTTP requests and delegate business logic to services.
+
+- Services contain business logic and abstract data access via interfaces.
+
+- Data layer is implemented using EF Core with support for both SQL Server and InMemory providers.
+
+- Dependency Injection is used to allow easy switching between data sources and to support testability.
+
+The solution adheres to SOLID principles and keeps responsibilities clearly separated across layers.
 
 ---
 
@@ -88,13 +105,13 @@ Apply migrations:
 
 Package Manager Console:
 
-```powershell
+```Package Manager Console
 Update-Database
 ```
 
 Or CLI:
 
-```bash
+```Developer PowerSchell
 dotnet ef database update
 ```
 
@@ -108,8 +125,41 @@ In `appsettings.json`:
 "DataSource": "InMemory"
 ```
 
+No database setup is required.
+
 ---
 
 ### Run
 
 Press `F5` in Visual Studio.
+
+Or CLI:
+
+```Developer PowerSchell
+dotnet run --project WebApiApplication
+```
+
+---
+
+## Running the Test
+
+Run tests from Visual Studio
+
+Open the solution in Visual Studio
+
+Go to Test → Test Explorer
+
+Click Run All Tests
+
+Or CLI:
+
+```Developer PowerSchell
+dotnet test
+```
+This will:
+
+Build the solution
+
+Execute all tests in the WebApiTests project
+
+Display results in the console
