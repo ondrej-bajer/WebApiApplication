@@ -3,13 +3,14 @@ using Asp.Versioning;
 using Asp.Versioning.ApiExplorer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Serilog;
+using Serilog.Events;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using WebApiApplication.Configuration;
 using WebApiApplication.Data;
 using WebApiApplication.Interfaces;
 using WebApiApplication.Middleware;
 using WebApiApplication.Services;
-using Serilog;
 
 namespace WebApiApplication
 {
@@ -19,8 +20,8 @@ namespace WebApiApplication
         public static void Main(string[] args)
         {
             Log.Logger = new LoggerConfiguration()
+                .WriteTo.File("logs/log-.txt", outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}", rollingInterval: RollingInterval.Day)
                 .WriteTo.Console()
-                .WriteTo.File("logs/log-.txt", rollingInterval: RollingInterval.Day)
                 .CreateLogger();
 
             try
