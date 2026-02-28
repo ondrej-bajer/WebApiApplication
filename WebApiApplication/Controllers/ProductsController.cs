@@ -39,6 +39,7 @@ namespace WebApiApplication.Controllers
 
         [HttpGet("{id:int}")]
         [MapToApiVersion("1.0")]
+        [MapToApiVersion("2.0")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ProductDto))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -55,6 +56,7 @@ namespace WebApiApplication.Controllers
         [HttpPatch("{id:int}/description")]
         [Consumes("application/json")]
         [MapToApiVersion("1.0")]
+        [MapToApiVersion("2.0")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
