@@ -61,11 +61,8 @@ namespace WebApiApplication.Controllers
         [Produces("application/json")]
         public async Task<IActionResult> UpdateDescription(int id, [FromBody] UpdateProductDescriptionRequest request, CancellationToken ct)
         {
-            if (id <= 0)
-                return BadRequest("Id must be a positive integer.");
-
-            var ok = await _service.UpdateDescriptionAsync(id, request.Description, ct);
-            return ok ? NoContent() : NotFound();
+            await _service.UpdateDescriptionAsync(id, request.Description, ct);
+            return NoContent();
         }
     }
 }

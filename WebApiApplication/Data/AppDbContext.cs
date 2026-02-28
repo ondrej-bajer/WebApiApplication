@@ -29,6 +29,7 @@ namespace WebApiApplication.Data
                 .HasColumnType("decimal(18,2)");
 
             product.Property(p => p.Description)
+                .HasMaxLength(2000)
                 .IsRequired(false);
 
             // Seed

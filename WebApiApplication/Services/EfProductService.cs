@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using WebApiApplication.Data;
 using WebApiApplication.DTOs;
 using WebApiApplication.Interfaces;
@@ -22,14 +23,19 @@ namespace WebApiApplication.Services
                 .Select(p => new ProductDto(p.Id, p.Name, p.ImgUri, p.Price, p.Description))
                 .FirstOrDefaultAsync(ct);
 
-        public async Task<bool> UpdateDescriptionAsync(int id, string? description, CancellationToken ct = default)
+        public async Task UpdateDescriptionAsync(int id, string? description, CancellationToken ct = default)
         {
-            var product = await _db.Products.FirstOrDefaultAsync(p => p.Id == id, ct);
-            if (product is null) return false;
+            if (id <= 0)
+                throw new ArgumentException("Id must be a positive integer.", nameof(id));
 
-            product.Description = description;
+            var product = await _db.Products.FirstOrDefaultAsync(p => p.Id == id, ct);
+            if (product is null)
+                throw new KeyNotFoundException($"Product with id {id} was not found.");
+
+            // Normalizace whitespace, ale null zůstává null
+            product.Description = description?.Trim();
+
             await _db.SaveChangesAsync(ct);
-            return true;
         }
 
         public async Task<PagedResponse<ProductDto>> GetPagedAsync(int page, int pageSize, CancellationToken ct = default)

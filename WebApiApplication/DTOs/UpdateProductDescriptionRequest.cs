@@ -1,7 +1,12 @@
-﻿namespace WebApiApplication.DTOs
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace WebApiApplication.DTOs
 {
     public class UpdateProductDescriptionRequest
     {
-        public string? Description { get; set; }
+        [Required]
+        [MinLength(1)]
+        [MaxLength(2000)]
+        public string Description { get; init; } = string.Empty;
     }
 }
