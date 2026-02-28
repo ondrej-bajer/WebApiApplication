@@ -1,6 +1,7 @@
 
 using Asp.Versioning;
 using Asp.Versioning.ApiExplorer;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Serilog;
@@ -8,8 +9,9 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 using WebApiApplication.Configuration;
 using WebApiApplication.Data;
 using WebApiApplication.Interfaces;
-using WebApiApplication.Services;
 using WebApiApplication.Middleware;
+using WebApiApplication.Services;
+using System.Diagnostics;
 
 
 namespace WebApiApplication
@@ -47,6 +49,31 @@ namespace WebApiApplication
                 }
 
                 builder.Services.AddControllers();
+
+                builder.Services.Configure<ApiBehaviorOptions>(options =>
+                {
+                    options.InvalidModelStateResponseFactory = context =>
+                    {
+                        var problem = new ValidationProblemDetails(context.ModelState)
+                        {
+                            Status = StatusCodes.Status400BadRequest,
+                            Title = "Validation failed",
+                            Type = "https://httpstatuses.com/400",
+                            Detail = "One or more validation errors occurred.",
+                            Instance = context.HttpContext.Request.Path
+                        };
+
+                        problem.Extensions["traceId"] =
+                            Activity.Current?.Id ?? context.HttpContext.TraceIdentifier;
+
+                        problem.Extensions["timestamp"] = DateTimeOffset.UtcNow;
+
+                        return new BadRequestObjectResult(problem)
+                        {
+                            ContentTypes = { "application/problem+json" }
+                        };
+                    };
+                });
 
                 builder.Services.AddApiVersioning(options =>
                 {
