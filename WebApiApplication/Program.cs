@@ -4,13 +4,13 @@ using Asp.Versioning.ApiExplorer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Serilog;
-using Serilog.Events;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using WebApiApplication.Configuration;
 using WebApiApplication.Data;
 using WebApiApplication.Interfaces;
-using WebApiApplication.Middleware;
 using WebApiApplication.Services;
+using WebApiApplication.Middleware;
+
 
 namespace WebApiApplication
 {
@@ -66,7 +66,8 @@ namespace WebApiApplication
                 builder.Services.AddEndpointsApiExplorer();
                 builder.Services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigSwaggerOptions>();
                 builder.Services.AddSwaggerGen();
-                builder.Services.AddTransient<ExceptionHandlingMiddleware>();
+                builder.Services.AddExceptionHandler<ApiExceptionHandler>();
+                builder.Services.AddProblemDetails();
                 builder.Services.AddHealthChecks();
 
                 var app = builder.Build();
@@ -88,7 +89,7 @@ namespace WebApiApplication
                     });
                 }
 
-                app.UseMiddleware<ExceptionHandlingMiddleware>();
+                app.UseExceptionHandler();
                 app.UseSerilogRequestLogging();
                 app.MapHealthChecks("/health");
 
