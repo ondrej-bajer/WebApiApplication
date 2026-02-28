@@ -22,8 +22,18 @@ namespace WebApiApplication
         public static void Main(string[] args)
         {
             Log.Logger = new LoggerConfiguration()
-                .WriteTo.File("logs/log-.txt", outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}", rollingInterval: RollingInterval.Day)
-                .WriteTo.Console()
+                .MinimumLevel.Information()
+                .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
+                .MinimumLevel.Override("Microsoft.AspNetCore", Serilog.Events.LogEventLevel.Warning)
+                .Enrich.FromLogContext()
+                .WriteTo.Console(
+                    outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}"
+                )
+                .WriteTo.File(
+                    "logs/log-.txt",
+                    rollingInterval: RollingInterval.Day,
+                    outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}"
+                )
                 .CreateLogger();
 
             try
@@ -117,7 +127,34 @@ namespace WebApiApplication
                 }
 
                 app.UseExceptionHandler();
-                app.UseSerilogRequestLogging();
+
+                app.UseSerilogRequestLogging(options =>
+                {
+                    options.MessageTemplate = "HTTP {RequestMethod} {RequestPath} => {StatusCode} in {Elapsed:0.0000} ms";
+
+                    options.GetLevel = (ctx, elapsed, ex) =>
+                    {
+                        var path = ctx.Request.Path.Value ?? "";
+
+                        // ignoruj swagger a framework šum
+                        if (path.StartsWith("/swagger") ||
+                            path.StartsWith("/_framework") ||
+                            path.StartsWith("/_vs"))
+                        {
+                            return Serilog.Events.LogEventLevel.Debug;
+                        }
+
+                        if (ex != null || ctx.Response.StatusCode >= 500)
+                            return Serilog.Events.LogEventLevel.Error;
+
+                        if (ctx.Response.StatusCode >= 400)
+                            return Serilog.Events.LogEventLevel.Warning;
+
+                        return Serilog.Events.LogEventLevel.Information;
+                    };
+                });
+
+
                 app.MapHealthChecks("/health");
 
                 app.UseHttpsRedirection();
