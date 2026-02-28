@@ -171,7 +171,7 @@ Display results in the console
 ### Swagger
 
 <p align="center">
-  <img src="docs/images/swagger.png" width="700"/>
+  <img src="WebApiApplication/docs/images/swagger.png" width="700"/>
 </p>
 
 ---
@@ -179,5 +179,5 @@ Display results in the console
 ## Logging (Serilog)
 
 <p align="center">
-  <img src="docs/images/logging.png" width="700"/>
+  <img src="WebApiApplication/docs/images/logging.png" width="700"/>
 </p>
