@@ -163,3 +163,21 @@ Build the solution
 Execute all tests in the WebApiTests project
 
 Display results in the console
+
+---
+
+## API Documentation (Swagger)
+
+### Swagger
+
+<p align="center">
+  <img src="docs/images/swagger.png" width="700"/>
+</p>
+
+---
+
+## Logging (Serilog)
+
+<p align="center">
+  <img src="docs/images/logging.png" width="700"/>
+</p>

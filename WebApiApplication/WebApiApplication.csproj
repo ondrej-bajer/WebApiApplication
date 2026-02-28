@@ -24,6 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="docs\images\" />
     <Folder Include="logs\" />
   </ItemGroup>
 
