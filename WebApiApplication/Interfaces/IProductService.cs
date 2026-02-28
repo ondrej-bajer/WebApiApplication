@@ -4,10 +4,6 @@ namespace WebApiApplication.Interfaces
 {
     public interface IProductService
     {
-        //IReadOnlyList<ProductDto> GetAll();
-        //PagedResponse<ProductDto> GetPaged(int page, int pageSize);
-        //ProductDto? GetById(int id);
-        //bool UpdateDescription(int id, string? description);
 
         Task<IReadOnlyList<ProductDto>> GetAllAsync(CancellationToken ct = default);
         Task<ProductDto?> GetByIdAsync(int id, CancellationToken ct = default);

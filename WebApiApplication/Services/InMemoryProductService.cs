@@ -48,13 +48,18 @@ namespace WebApiApplication.Services
         public Task<ProductDto?> GetByIdAsync(int id, CancellationToken ct = default)
             => Task.FromResult(_products.Where(p => p.Id == id).Select(ToDto).FirstOrDefault());
 
-        public Task<bool> UpdateDescriptionAsync(int id, string? description, CancellationToken ct = default)
+        public Task UpdateDescriptionAsync(int id, string? description, CancellationToken ct = default)
         {
-            var product = _products.FirstOrDefault(p => p.Id == id);
-            if (product is null) return Task.FromResult(false);
+            if (id <= 0)
+                throw new ArgumentException("Id must be positive.", nameof(id));
 
-            product.Description = description;
-            return Task.FromResult(true);
+            var product = _products.FirstOrDefault(p => p.Id == id);
+            if (product is null)
+                throw new KeyNotFoundException($"Product with id {id} was not found.");
+
+            product.Description = description?.Trim();
+
+            return Task.CompletedTask;
         }
 
         public Task<PagedResponse<ProductDto>> GetPagedAsync(int page, int pageSize, CancellationToken ct = default)
