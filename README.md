@@ -13,6 +13,7 @@ It provides product endpoints with:
 - Support for MSSQL (LocalDB) and InMemory data source
 - EF Core migrations and seed data
 - Unit and integration test
+- JWT Bearer authentication with role-based authorization policies
 
 ---
 
@@ -46,6 +47,24 @@ The solution adheres to SOLID principles and keeps responsibilities clearly sepa
 
 ## API Endpoints
 
+```http
+POST /api/auth/login
+
+For showcase purpose exist:
+
+Admin
+{
+  "username": "admin",
+  "password": "admin123"
+}
+
+User
+{
+  "username": "user",
+  "password": "user123"
+}
+```
+
 ### v1
 
 ```http
@@ -57,7 +76,9 @@ PATCH  /api/v1/products/{id}/description
 ### v2
 
 ```http
+GET    /api/v2/products
 GET /api/v2/products?page=1&pageSize=10
+PATCH  /api/v2/products/{id}/description
 ```
 
 Supports pagination.
