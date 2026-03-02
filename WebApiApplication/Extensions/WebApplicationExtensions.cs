@@ -53,6 +53,10 @@ public static class WebApplicationExtensions
         app.MapHealthChecks("/health");
 
         app.UseHttpsRedirection();
+
+        app.UseAuthentication();
+        app.UseAuthorization();
+
         app.MapControllers();
 
         return app;

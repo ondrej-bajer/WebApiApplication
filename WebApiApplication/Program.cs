@@ -28,7 +28,7 @@ public partial class Program
 
             builder.Services
                 .AddInfrastructure(builder.Configuration)
-                .AddApi();
+                .AddApi(builder.Configuration);
 
             var app = builder.Build();
             app.UseApiPipeline();
