@@ -1,4 +1,5 @@
 ﻿using Asp.Versioning;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using WebApiApplication.DTOs;
@@ -23,6 +24,7 @@ namespace WebApiApplication.Controllers
         [MapToApiVersion("1.0")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<ProductDto>))]
         [Produces("application/json")]
+        [Authorize]
         public async Task<ActionResult<IEnumerable<ProductDto>>> GetAllV1(CancellationToken ct)
         {
             return Ok(await _service.GetAllAsync(ct));
@@ -32,6 +34,7 @@ namespace WebApiApplication.Controllers
         [MapToApiVersion("2.0")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PagedResponse<ProductDto>))]
         [Produces("application/json")]
+        [Authorize]
         public async Task<ActionResult<PagedResponse<ProductDto>>> GetAllV2([FromQuery] PaginationQuery query, CancellationToken ct)
         {
             return Ok(await _service.GetPagedAsync(query.Page, query.PageSize, ct));
@@ -44,6 +47,7 @@ namespace WebApiApplication.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [Produces("application/json")]
+        [Authorize]
         public async Task<ActionResult<ProductDto>> GetById(int id, CancellationToken ct)
         {
             if (id <= 0)
@@ -61,6 +65,7 @@ namespace WebApiApplication.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [Produces("application/json")]
+        [Authorize]
         public async Task<IActionResult> UpdateDescription(int id, [FromBody] UpdateProductDescriptionRequest request, CancellationToken ct)
         {
             await _service.UpdateDescriptionAsync(id, request.Description, ct);
