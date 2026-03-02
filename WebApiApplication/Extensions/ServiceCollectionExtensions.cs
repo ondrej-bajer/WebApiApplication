@@ -59,13 +59,16 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAuthService, AuthService>();
 
         // JWT Authentication
-        var jwt = config.GetSection(JwtOptions.SectionName).Get<JwtOptions>()
-                  ?? throw new InvalidOperationException("Jwt section missing.");
-
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
             {
-                options.RequireHttpsMetadata = true;
+                // JwtOptions získáme přes Configuration (ale správně)
+                var jwtSection = config.GetSection(JwtOptions.SectionName);
+                var jwt = jwtSection.Get<JwtOptions>()
+                          ?? throw new InvalidOperationException("Jwt section missing.");
+
+                options.RequireHttpsMetadata = false;
+
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,
@@ -75,7 +78,8 @@ public static class ServiceCollectionExtensions
 
                     ValidIssuer = jwt.Issuer,
                     ValidAudience = jwt.Audience,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.Key)),
+                    IssuerSigningKey =
+                        new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.Key)),
                     ClockSkew = TimeSpan.FromSeconds(30)
                 };
             });

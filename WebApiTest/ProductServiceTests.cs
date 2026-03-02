@@ -33,26 +33,37 @@ public class ProductServiceTests
     }
 
     [Fact]
-    public async Task UpdateDescriptionAsync_ReturnsFalse_WhenProductDoesNotExist()
+    public async Task UpdateDescriptionAsync_WhenProductDoesNotExist_Throws()
     {
         IProductService svc = new InMemoryProductService();
 
-        var ok = await svc.UpdateDescriptionAsync(999, "x");
-
-        Assert.False(ok);
+        await Assert.ThrowsAsync<KeyNotFoundException>(() =>
+            svc.UpdateDescriptionAsync(999, "x"));
     }
 
     [Fact]
-    public async Task UpdateDescriptionAsync_WhenProductExists()
+    public async Task UpdateDescriptionAsync_WhenProductExists_UpdatesValue()
     {
         IProductService svc = new InMemoryProductService();
 
-        var ok = await svc.UpdateDescriptionAsync(1, "updated");
-
-        Assert.True(ok);
+        await svc.UpdateDescriptionAsync(1, "updated");
 
         var product = await svc.GetByIdAsync(1);
         Assert.NotNull(product);
         Assert.Equal("updated", product!.Description);
+    }
+
+    [Fact]
+    public async Task UpdateDescriptionAsync_IsIdempotent()
+    {
+        IProductService svc = new InMemoryProductService();
+
+        await svc.UpdateDescriptionAsync(1, "same");
+        var first = await svc.GetByIdAsync(1);
+
+        await svc.UpdateDescriptionAsync(1, "same");
+        var second = await svc.GetByIdAsync(1);
+
+        Assert.Equal(first!.Description, second!.Description);
     }
 }

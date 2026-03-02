@@ -1,5 +1,7 @@
 ﻿using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using WebApiApplication.DTOs;
 using Xunit;
 
@@ -14,9 +16,60 @@ public class ProductsEndpointsTests : IClassFixture<CustomWebApplicationFactory>
         _client = factory.CreateClient();
     }
 
-    [Fact]
-    public async Task GetAll_v1_returns_200_and_list()
+    // -----------------------
+    // Helpers
+    // -----------------------
+
+    private async Task<string> LoginAndGetTokenAsync(string username, string password)
     {
+        var resp = await _client.PostAsJsonAsync("/api/auth/login", new { username, password });
+        resp.EnsureSuccessStatusCode();
+
+        using var doc = JsonDocument.Parse(await resp.Content.ReadAsStringAsync());
+        return doc.RootElement.GetProperty("accessToken").GetString()
+               ?? throw new InvalidOperationException("Token missing in response.");
+    }
+
+    private async Task AuthorizeAsAdminAsync()
+    {
+        var token = await LoginAndGetTokenAsync("admin", "admin123");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+    }
+
+    private async Task AuthorizeAsUserAsync()
+    {
+        var token = await LoginAndGetTokenAsync("user", "user123");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+    }
+
+    private void ClearAuthorization()
+    {
+        _client.DefaultRequestHeaders.Authorization = null;
+    }
+
+    // -----------------------
+    // Auth behavior
+    // -----------------------
+
+    [Fact]
+    public async Task GetAll_v1_without_token_returns_401()
+    {
+        ClearAuthorization();
+
+        var response = await _client.GetAsync("/api/v1/products");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    // -----------------------
+    // v1 - Authorized reads
+    // -----------------------
+
+    [Fact]
+    public async Task GetAll_v1_returns_200_and_list_when_authorized()
+    {
+        await AuthorizeAsAdminAsync();
+
         var response = await _client.GetAsync("/api/v1/products");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -27,8 +80,10 @@ public class ProductsEndpointsTests : IClassFixture<CustomWebApplicationFactory>
     }
 
     [Fact]
-    public async Task GetById_v1_existing_returns_200()
+    public async Task GetById_v1_existing_returns_200_when_authorized()
     {
+        await AuthorizeAsAdminAsync();
+
         var response = await _client.GetAsync("/api/v1/products/1");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -39,22 +94,46 @@ public class ProductsEndpointsTests : IClassFixture<CustomWebApplicationFactory>
     }
 
     [Fact]
-    public async Task GetById_v1_not_found_returns_404()
+    public async Task GetById_v1_not_found_returns_404_when_authorized()
     {
+        await AuthorizeAsAdminAsync();
+
         var response = await _client.GetAsync("/api/v1/products/999999");
+
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Fact]
-    public async Task GetById_v1_invalid_id_returns_400()
+    public async Task GetById_v1_invalid_id_returns_400_when_authorized()
     {
+        await AuthorizeAsAdminAsync();
+
         var response = await _client.GetAsync("/api/v1/products/0");
+
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
+    // -----------------------
+    // v1 - PATCH (Admin only)
+    // -----------------------
+
     [Fact]
-    public async Task PatchDescription_v1_existing_returns_204_and_updates_value()
+    public async Task PatchDescription_v1_as_user_returns_403()
     {
+        await AuthorizeAsUserAsync();
+
+        var patchBody = new UpdateProductDescriptionRequest { Description = "Updated description" };
+
+        var response = await _client.PatchAsJsonAsync("/api/v1/products/1/description", patchBody);
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task PatchDescription_v1_existing_as_admin_returns_204_and_updates_value()
+    {
+        await AuthorizeAsAdminAsync();
+
         // arrange
         var patchBody = new UpdateProductDescriptionRequest { Description = "Updated description" };
 
@@ -74,8 +153,10 @@ public class ProductsEndpointsTests : IClassFixture<CustomWebApplicationFactory>
     }
 
     [Fact]
-    public async Task PatchDescription_v1_not_found_returns_404()
+    public async Task PatchDescription_v1_not_found_returns_404_when_authorized_as_admin()
     {
+        await AuthorizeAsAdminAsync();
+
         var patchBody = new UpdateProductDescriptionRequest { Description = "Does not matter" };
 
         var response = await _client.PatchAsJsonAsync("/api/v1/products/999999/description", patchBody);
@@ -83,9 +164,15 @@ public class ProductsEndpointsTests : IClassFixture<CustomWebApplicationFactory>
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
+    // -----------------------
+    // v2 - Pagination (Authorized)
+    // -----------------------
+
     [Fact]
-    public async Task GetAll_v2_default_pagination_returns_200_and_pageSize_10()
+    public async Task GetAll_v2_default_pagination_returns_200_and_pageSize_10_when_authorized()
     {
+        await AuthorizeAsAdminAsync();
+
         var response = await _client.GetAsync("/api/v2/products");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -100,8 +187,10 @@ public class ProductsEndpointsTests : IClassFixture<CustomWebApplicationFactory>
     }
 
     [Fact]
-    public async Task GetAll_v2_custom_pagination_returns_expected_size()
+    public async Task GetAll_v2_custom_pagination_returns_expected_size_when_authorized()
     {
+        await AuthorizeAsAdminAsync();
+
         var response = await _client.GetAsync("/api/v2/products?page=2&pageSize=5");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -115,8 +204,10 @@ public class ProductsEndpointsTests : IClassFixture<CustomWebApplicationFactory>
     }
 
     [Fact]
-    public async Task GetAll_v2_invalid_page_returns_400_if_model_validation_enabled()
+    public async Task GetAll_v2_invalid_page_returns_400_when_authorized()
     {
+        await AuthorizeAsAdminAsync();
+
         // This test is valid for PaginationQuery [Range(1, ...)].
         var response = await _client.GetAsync("/api/v2/products?page=0&pageSize=10");
 
