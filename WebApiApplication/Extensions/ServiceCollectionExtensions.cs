@@ -62,7 +62,7 @@ public static class ServiceCollectionExtensions
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
             {
-                // JwtOptions získáme přes Configuration (ale správně)
+                // JwtOptions get in configuration
                 var jwtSection = config.GetSection(JwtOptions.SectionName);
                 var jwt = jwtSection.Get<JwtOptions>()
                           ?? throw new InvalidOperationException("Jwt section missing.");

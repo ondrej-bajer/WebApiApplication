@@ -22,19 +22,18 @@ namespace WebApiApplication.Middleware
     Exception exception,
     CancellationToken cancellationToken)
         {
-            // Pokud už response začala (třeba něco zapsalo do body), nemůžeme přepsat status/hlavičky.
             if (httpContext.Response.HasStarted)
             {
                 _logger.LogWarning(exception,
                     "Response already started, cannot write ProblemDetails. TraceId={TraceId}",
                     GetTraceId(httpContext));
 
-                return false; // nech ASP.NET udělat default handling
+                return false; //default handling via ASP.NET
             }
 
             var (status, title, type) = Map(exception);
 
-            // Logování: 5xx = Error, 4xx = Warning
+            // logs: 5xx = Error, 4xx = Warning
             if (status >= 500)
                 _logger.LogError(exception, "Unhandled exception. TraceId={TraceId}", GetTraceId(httpContext));
             else
@@ -55,11 +54,10 @@ namespace WebApiApplication.Middleware
             problem.Extensions["traceId"] = GetTraceId(httpContext);
             problem.Extensions["timestamp"] = DateTimeOffset.Now; // (3)
 
-            // Vyčisti případné rozpracované response
             httpContext.Response.Clear();
             httpContext.Response.StatusCode = status;
 
-            // Správný content-type pro ProblemDetails
+            // right content type
             httpContext.Response.ContentType = "application/problem+json";
 
             await httpContext.Response.WriteAsJsonAsync(problem, cancellationToken);
@@ -74,7 +72,7 @@ namespace WebApiApplication.Middleware
                 ValidationException or ArgumentException or FormatException =>
                     (StatusCodes.Status400BadRequest, "Bad Request", "https://httpstatuses.com/400"),
 
-                // 404 (pokud chceš vlastní NotFoundException, přidej ji sem)
+                // 404
                 KeyNotFoundException =>
                     (StatusCodes.Status404NotFound, "Not Found", "https://httpstatuses.com/404"),
 
@@ -85,7 +83,7 @@ namespace WebApiApplication.Middleware
                 DbUpdateException =>
                     (StatusCodes.Status409Conflict, "Conflict", "https://httpstatuses.com/409"),
 
-                // 401/403 (pokud bys někdy házel – volitelné)
+                // 401/403
                 UnauthorizedAccessException =>
                     (StatusCodes.Status401Unauthorized, "Unauthorized", "https://httpstatuses.com/401"),
 

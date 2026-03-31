@@ -32,7 +32,7 @@ public static class WebApplicationExtensions
             {
                 var path = ctx.Request.Path.Value ?? "";
 
-                // ignore swagger / framework noise
+                // ignore swagger
                 if (path.StartsWith("/swagger") ||
                     path.StartsWith("/_framework") ||
                     path.StartsWith("/_vs"))

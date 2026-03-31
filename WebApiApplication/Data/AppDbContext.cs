@@ -32,7 +32,7 @@ namespace WebApiApplication.Data
                 .HasMaxLength(2000)
                 .IsRequired(false);
 
-            // Seed
+            // Initial Seed
             product.HasData(
                 new Product { Id = 1, Name = "Laptop", ImgUri = "https://img/1", Price = 1000m, Description = "Gaming laptop" },
                 new Product { Id = 2, Name = "Mouse", ImgUri = "https://img/2", Price = 50m, Description = null },

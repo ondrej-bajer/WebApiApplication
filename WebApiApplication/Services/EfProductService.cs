@@ -32,7 +32,7 @@ namespace WebApiApplication.Services
             if (product is null)
                 throw new KeyNotFoundException($"Product with id {id} was not found.");
 
-            // Normalizace whitespace, ale null zůstává null
+            // Normalizace whitespace, ale null zůstává null!!!
             product.Description = description?.Trim();
 
             await _db.SaveChangesAsync(ct);
